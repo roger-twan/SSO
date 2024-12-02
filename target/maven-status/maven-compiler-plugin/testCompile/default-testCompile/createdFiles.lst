@@ -1,0 +1,4 @@
+com/roger/sso/service/UserServiceTest.class
+com/roger/sso/repository/UserRepositoryTest.class
+com/roger/sso/SsoApplicationTests.class
+com/roger/sso/controller/UserControllerTest.class

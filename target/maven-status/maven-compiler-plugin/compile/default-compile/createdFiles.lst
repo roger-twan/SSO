@@ -1,0 +1,5 @@
+com/roger/sso/controller/UserController.class
+com/roger/sso/SsoApplication.class
+com/roger/sso/repository/UserRepository.class
+com/roger/sso/model/User.class
+com/roger/sso/service/UserService.class
