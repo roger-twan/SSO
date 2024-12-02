@@ -1,7 +1,9 @@
 package com.roger.sso.controller;
 
-import com.roger.sso.model.User;
-import com.roger.sso.service.UserService;
+import com.roger.sso.User;
+import com.roger.sso.UserController;
+import com.roger.sso.UserService;
+
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;

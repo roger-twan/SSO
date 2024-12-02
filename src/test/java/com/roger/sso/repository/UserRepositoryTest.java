@@ -1,6 +1,8 @@
 package com.roger.sso.repository;
 
-import com.roger.sso.model.User;
+import com.roger.sso.User;
+import com.roger.sso.UserRepository;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
