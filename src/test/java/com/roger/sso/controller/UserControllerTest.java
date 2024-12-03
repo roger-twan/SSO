@@ -1,8 +1,8 @@
 package com.roger.sso.controller;
 
-import com.roger.sso.User;
-import com.roger.sso.UserController;
-import com.roger.sso.UserService;
+import com.roger.sso.entity.User;
+import com.roger.sso.controller.ApiController;
+import com.roger.sso.service.UserService;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -16,7 +16,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
-@WebMvcTest(UserController.class)
+@WebMvcTest(ApiController.class)
 public class UserControllerTest {
 
     @Autowired
@@ -26,7 +26,7 @@ public class UserControllerTest {
     private UserService userService;
 
     @InjectMocks
-    private UserController userController;
+    private ApiController userController;
 
     @Test
     public void testGetUserByEmail() throws Exception {

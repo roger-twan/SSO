@@ -1,0 +1,12 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "npx tailwindcss -i ./main.css -o ../resources/static/main.css",
+    "watch": "npx tailwindcss -i ./main.css -o ../resources/static/main.css --watch"
+  },
+  "devDependencies": {
+    "tailwind": "^4.0.0"
+  }
+}

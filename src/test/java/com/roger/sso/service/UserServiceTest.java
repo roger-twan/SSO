@@ -1,8 +1,8 @@
 package com.roger.sso.service;
 
-import com.roger.sso.User;
-import com.roger.sso.UserRepository;
-import com.roger.sso.UserService;
+import com.roger.sso.entity.User;
+import com.roger.sso.repository.UserRepository;
+import com.roger.sso.service.UserService;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
