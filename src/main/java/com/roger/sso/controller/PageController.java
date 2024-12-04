@@ -17,7 +17,22 @@ public class PageController {
   }
 
   @GetMapping("/signup")
-  public String getSignUpPagez() {
+  public String getSignUpPage() {
     return "signUp";
+  }
+
+  @GetMapping("/verify_email")
+  public String getVerifyEmailPage() {
+    return "verifyEmail";
+  }
+
+  @GetMapping("/verify_email_result")
+  public String getVerifyEmailResultPage() {
+    return "verifyEmailResult";
+  }
+
+  @GetMapping("/authorization")
+  public String getAuthorizationPage() {
+    return "authorization";
   }
 }
