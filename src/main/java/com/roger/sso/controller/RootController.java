@@ -1,11 +1,17 @@
 package com.roger.sso.controller;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+
+import com.roger.sso.dto.SignUpDto;
+
+import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/")
-public class PageController {
+public class RootController {
   @GetMapping
   public String getHomePage() {
     return "home";
@@ -17,8 +23,27 @@ public class PageController {
   }
 
   @GetMapping("/signup")
-  public String getSignUpPage() {
+  public String getSignUpPage(Model model) {
+    model.addAttribute("signUpDto", new SignUpDto());
     return "signUp";
+  }
+
+
+  @PostMapping("/signup")
+  public String handleSignUp(
+    @Valid @ModelAttribute("signUpDto") SignUpDto signUpDto,
+    BindingResult bindingResult,
+    Model model
+  ) {
+    if (bindingResult.hasErrors()) {
+      bindingResult.getAllErrors().forEach(error -> {
+        System.out.println(error);
+    });
+      model.addAttribute("signUpDto", signUpDto);
+      return "signUp";
+    }
+
+    return "signIn";
   }
 
   @GetMapping("/verify_email")

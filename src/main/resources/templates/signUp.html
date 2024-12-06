@@ -12,31 +12,56 @@
 <body class="bg-gradient-to-b from-blue-500 to-blue-400 flex items-center justify-center h-screen">
   <div class="bg-white shadow-lg rounded-lg p-8 w-96">
     <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Sign Up</h2>
-    <form action="#" method="POST" class="space-y-6">
+    <form action="/signup" method="POST" th:object="${signUpDto}" class="space-y-6">
       <!-- Email -->
       <div class="mb-4">
         <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-        <input type="email" id="email" name="email"
+        <input
+          type="email"
+          id="email"
+          name="email"
+          th:field="*{email}"
           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          placeholder="Enter your email" required />
+          placeholder="Enter your email"
+          required
+        />
+        <p class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></p>
       </div>
       <!-- Password -->
       <div>
         <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-        <input type="password" id="password" name="password"
+        <input
+          type="password"
+          id="password"
+          name="password"
+          th:field="*{password}"
           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          placeholder="Enter your password" required />
+          placeholder="Enter your password"
+          required
+        />
+        <p class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></p>
       </div>
       <!-- Confirm Password -->
       <div class="mb-4">
-        <label for="confirm_password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
-        <input type="password" id="confirm_password" name="confirm_password"
+        <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+        <input
+          type="password"
+          id="confirmPassword"
+          name="confirmPassword"
+          th:field="*{confirmPassword}"
           class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          placeholder="Confirm your password" required />
+          placeholder="Confirm your password"
+          required
+        />
+        <p class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></p>
       </div>
+      <p class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative"
+        th:if="${#fields.hasGlobalErrors()}" th:errors="*{global}"></p>
+
       <!-- Submit Button -->
       <div>
-        <button type="submit"
+        <button
+          type="submit"
           class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
           Sign Up
         </button>

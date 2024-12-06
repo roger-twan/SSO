@@ -13,8 +13,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
-@WebMvcTest(PageController.class)
-public class PageControllerTest {
+@WebMvcTest(RootController.class)
+public class RootControllerTest {
   @Autowired
   private MockMvc mockMvc;
 
