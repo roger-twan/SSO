@@ -1,17 +1,22 @@
 package com.roger.sso.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import com.roger.sso.dto.SignUpDto;
+import com.roger.sso.service.UserService;
 
 import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/")
 public class RootController {
+  @Autowired
+  private UserService userService;
+
   @GetMapping
   public String getHomePage() {
     return "home";
@@ -28,7 +33,6 @@ public class RootController {
     return "signUp";
   }
 
-
   @PostMapping("/signup")
   public String handleSignUp(
     @Valid @ModelAttribute("signUpDto") SignUpDto signUpDto,
@@ -36,18 +40,27 @@ public class RootController {
     Model model
   ) {
     if (bindingResult.hasErrors()) {
-      bindingResult.getAllErrors().forEach(error -> {
-        System.out.println(error);
-    });
       model.addAttribute("signUpDto", signUpDto);
       return "signUp";
     }
 
-    return "signIn";
+    try {
+      userService.handleSignUp(signUpDto);
+      return "emailSent";
+    } catch (IllegalArgumentException e) {
+      model.addAttribute("errorMessage", e.getMessage());
+      return "signUp";
+    }
   }
 
-  @GetMapping("/verify_email")
-  public String getVerifyEmailPage() {
+  @GetMapping("/email_sent")
+  public String getVerifyEmailSentPage() {
+    return "emailSent";
+  }
+
+  @GetMapping("/verify_email/{token}")
+  public String getVerifyEmailPage(@PathVariable String token) {
+    // TODO: verify token
     return "verifyEmail";
   }
 

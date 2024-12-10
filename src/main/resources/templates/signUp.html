@@ -12,6 +12,7 @@
 <body class="bg-gradient-to-b from-blue-500 to-blue-400 flex items-center justify-center h-screen">
   <div class="bg-white shadow-lg rounded-lg p-8 w-96">
     <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Sign Up</h2>
+
     <form action="/signup" method="POST" th:object="${signUpDto}" class="space-y-6">
       <!-- Email -->
       <div class="mb-4">
@@ -25,7 +26,7 @@
           placeholder="Enter your email"
           required
         />
-        <p class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></p>
+        <p class="mt-2 text-xs bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></p>
       </div>
       <!-- Password -->
       <div>
@@ -39,7 +40,7 @@
           placeholder="Enter your password"
           required
         />
-        <p class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></p>
+        <p class="mt-2 text-xs bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></p>
       </div>
       <!-- Confirm Password -->
       <div class="mb-4">
@@ -53,10 +54,12 @@
           placeholder="Confirm your password"
           required
         />
-        <p class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></p>
+        <p class="mt-2 text-xs bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></p>
       </div>
-      <p class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative"
+      <p class="mt-2 text-xs bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative"
         th:if="${#fields.hasGlobalErrors()}" th:errors="*{global}"></p>
+
+      <p class="mt-2 text-xs bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative" th:if="${errorMessage}" th:text="${errorMessage}"></p>
 
       <!-- Submit Button -->
       <div>

@@ -1,6 +1,7 @@
 package com.roger.sso.dto;
 
 import com.roger.sso.validation.PasswordMatches;
+import com.roger.sso.validation.PasswordRules;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -12,9 +13,11 @@ public class SignUpDto {
   private String email;
 
   @NotBlank(message = "Password is required")
+  @PasswordRules
   private String password;
 
   @NotBlank(message = "Confirm Password is required")
+  @PasswordRules
   private String confirmPassword;
 
   public String getEmail() {
