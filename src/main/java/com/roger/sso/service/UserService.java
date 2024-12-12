@@ -2,13 +2,14 @@ package com.roger.sso.service;
 
 import com.roger.sso.dto.SignUpDto;
 import com.roger.sso.entity.User;
+import com.roger.sso.enums.VerificationError;
+import com.roger.sso.exception.VerificationException;
 import com.roger.sso.repository.UserRepository;
 import com.roger.sso.util.PasswordUtil;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,32 +27,56 @@ public class UserService {
   @Autowired
   private RedisService redisService;
 
+  private PasswordUtil passwordUtil;
+
   public void handleSignUp(SignUpDto signUpDto) {
     String email = signUpDto.getEmail().toLowerCase().trim();
-    Optional<User> user = userRepository.findByEmail(email);
+    Optional<User> optionalUser = userRepository.findByEmail(email);
 
-    if (user.isPresent()) {
-      throw new IllegalArgumentException("Email already has been registered.");
+    if (optionalUser.isPresent()) {
+      User user = optionalUser.get();
+      if (user.getStatus() == 1) {
+        throw new IllegalArgumentException("Email already has been signed up.");
+      } else if (user.getStatus() == 0) {
+        user.setPassword(passwordUtil.encode(signUpDto.getPassword()));
+        userRepository.save(user);
+      }
     } else {
       User newUser = new User();
       String password = signUpDto.getPassword();
       newUser.setId(UUID.randomUUID().toString());
       newUser.setEmail(email);
-      newUser.setPassword(PasswordUtil.encode(password));
+      newUser.setPassword(passwordUtil.encode(password));
       newUser.setStatus(0);
       userRepository.save(newUser);
-
-      String token = tokenService.generateToken(email);
-      redisService.saveRedis("verify:" + email, token, (long)(60 * 5));
-      emailService.sendHtmlActivationEmail(email, token);
     }
+
+    String token = tokenService.generateToken(email);
+    redisService.saveRedis("verify:" + email, token, 60 * 5);
+    emailService.sendActivationEmail(email, token);
   }
 
-  public List<User> getAllUsers() {
-    return userRepository.findAll();
-  }
+  public void verifyEmail(String token) {
+    String email = tokenService.parseToken(token).getSubject();
+    String redisToken = redisService.getRedis("verify:" + email);
+    Optional<User> OptionalUser = userRepository.findByEmail(email);
 
-  public User createUser(User user) {
-    return userRepository.save(user);
+    if (redisToken == null) {
+      if (OptionalUser.isEmpty()) {
+        throw new VerificationException(VerificationError.USER_NOT_FOUND);
+      } else if (OptionalUser.get().getStatus() == 1) {
+        throw new VerificationException(VerificationError.ALREADY_VERIFIED);
+      } else {
+        throw new VerificationException(VerificationError.TOKEN_EXPIRED);
+      }
+    }
+
+    if (redisToken.equals(token)) {
+      User user = OptionalUser.get();
+      user.setStatus(1);
+      userRepository.save(user);
+    } else {
+      throw new VerificationException(VerificationError.INVALID_TOKEN);
+    }
   }
 }

@@ -11,15 +11,29 @@
 
 <body class="bg-gradient-to-b from-blue-500 to-blue-400 flex items-center justify-center h-screen">
   <div class="bg-white shadow-lg rounded-lg p-8 w-96">
-    <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Sign In</h2>
-    <form action="#" method="POST" class="space-y-6">
-      <!-- Email -->
-      <div>
-        <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-        <input type="text" id="email" name="email"
-          class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-          placeholder="Enter your email" required />
-      </div>
+    <!-- SUCCESS -->
+    <div th:if="${result == 'SUCCESS'} or ${result == 'ALREADY_VERIFIED'}">
+      <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Verification successful</h2>
+      <p>You have successfully verified your email. You can now sign in to your account. <a href="/signin" class="text-blue-500 hover:underline">Sign in</a></p>
+    </div>
+
+    <!-- USER_NOT_FOUND -->
+    <div th:if="${result == 'USER_NOT_FOUND'}">
+      <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Verification failed</h2>
+      <p>Invalid verification token. Please sign up first. <a href="/signup" class="text-blue-500 hover:underline">Sign up</a></p>
+    </div>
+
+    <!-- EXPIRED_TOKEN -->
+    <div th:if="${result == 'TOKEN_EXPIRED'}">
+      <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Verification failed</h2>
+      <p>Verification token has expired. Please sign up again. <a href="/signup" class="text-blue-500 hover:underline">Sign up</a></p>
+    </div>
+
+    <!-- INVALID_TOKEN -->
+    <div th:if="${result == 'INVALID_TOKEN'}">
+      <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Verification failed</h2>
+      <p>Invalid verification token. Please try again.</p>
+    </div>
   </div>
 </body>
 

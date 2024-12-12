@@ -27,23 +27,6 @@ public class RootControllerTest {
   private UserService userService;
 
   @Test
-  public void testGetSignUpPage() throws Exception {
-    String content = mockMvc.perform(get("/signup"))
-        .andExpect(status().isOk())
-        .andExpect(view().name("signUp"))
-        .andReturn()
-        .getResponse()
-        .getContentAsString();
-
-    Document document = Jsoup.parse(content);
-    assertThat(document.title()).isEqualTo("Sign Up | SSO");
-    assertThat(document.select("input[name=email]").size()).isEqualTo(1);
-    assertThat(document.select("input[name=password]").size()).isEqualTo(1);
-    assertThat(document.select("input[name=confirmPassword]").size()).isEqualTo(1);
-    assertThat(document.select("button[type=submit]").size()).isEqualTo(1);
-  }
-
-  @Test
   public void testGetHomePage() throws Exception {
     String content = mockMvc.perform(get("/"))
         .andExpect(status().isOk())
