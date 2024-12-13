@@ -28,22 +28,40 @@ public class UserRepositoryTest {
 
   @Test
   public void testFindByEmailWithUserExists() {
+    String testEmail = "test@example.com";
     User user = new User();
     user.setId("testId");
-    user.setEmail("test@example.com");
+    user.setEmail(testEmail);
     user.setStatus(0);
     user.setPassword("testPassword");
     userRepository.save(user);
 
-    Optional<User> result = userRepository.findByEmail("test@example.com");
+    Optional<User> result = userRepository.findByEmail(testEmail);
 
     assertTrue(result.isPresent());
-    assertTrue(result.get().getEmail().equals("test@example.com"));
+    assertTrue(result.get().getEmail().equals(testEmail));
   }
 
   @Test
   public void testFindByEmailWithUserDoesNotExist() {
     Optional<User> result = userRepository.findByEmail("nonexistent@example.com");
+
+    assertFalse(result.isPresent());
+  }
+
+  @Test
+  public void testDeleteByEmail() {
+    String testEmail = "test@example.com";
+    User user = new User();
+    user.setId("testId");
+    user.setEmail(testEmail);
+    user.setStatus(0);
+    user.setPassword("testPassword");
+    userRepository.save(user);
+
+    userRepository.deleteByEmail(testEmail);
+
+    Optional<User> result = userRepository.findByEmail(testEmail);
 
     assertFalse(result.isPresent());
   }

@@ -6,7 +6,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
@@ -91,19 +90,10 @@ public class SignUpControllerTest {
     
     doNothing().when(userService).handleSignUp(any(SignUpDto.class));
 
-    mockMvc.perform(MockMvcRequestBuilders.post("/signup")        
+    String content = mockMvc.perform(MockMvcRequestBuilders.post("/signup")
         .flashAttr("signUpDto", signUpDto))
         .andExpect(MockMvcResultMatchers.status().isOk())
-        .andExpect(MockMvcResultMatchers.view().name("emailSent"));
-
-    verify(userService).handleSignUp(signUpDto);
-  }
-
-  @Test
-  public void testGetVerifyEmailSentPage() throws Exception {
-    String content = mockMvc.perform(get("/signup/email_sent"))
-        .andExpect(status().isOk())
-        .andExpect(view().name("emailSent"))
+        .andExpect(MockMvcResultMatchers.view().name("emailSent"))
         .andReturn()
         .getResponse()
         .getContentAsString();
@@ -111,18 +101,22 @@ public class SignUpControllerTest {
     Document document = Jsoup.parse(content);
     assertThat(document.title()).isEqualTo("Email Sent | SSO");
     assertThat(document.select("h2").first().text()).isEqualTo("Thanks for signing up");
+
+    verify(userService).handleSignUp(signUpDto);
   }
 
   @Test
   public void testGetVerifyEmailWithSuccess() throws Exception {
     String token = "validToken";
-    MvcResult result = mockMvc.perform(get("/signup/verify_email/{token}", token))
+    String content = mockMvc.perform(get("/signup/verify_email/{token}", token))
         .andExpect(status().isOk())
         .andExpect(view().name("verifyEmail"))
         .andExpect(MockMvcResultMatchers.model().attribute("result", "SUCCESS"))
-        .andReturn();
+        .andReturn()
+        .getResponse()
+        .getContentAsString();
     
-    Document document = Jsoup.parse(result.getResponse().getContentAsString());
+    Document document = Jsoup.parse(content);
     assertThat(document.title()).isEqualTo("Verify Email | SSO");
     assertThat(document.select("h2").first().text()).isEqualTo("Verification successful");
 
@@ -135,13 +129,15 @@ public class SignUpControllerTest {
 
     doThrow(new VerificationException(VerificationError.USER_NOT_FOUND)).when(userService).verifyEmail(token);
 
-    MvcResult result = mockMvc.perform(get("/signup/verify_email/{token}", token))
+    String content = mockMvc.perform(get("/signup/verify_email/{token}", token))
         .andExpect(status().isOk())
         .andExpect(view().name("verifyEmail"))
         .andExpect(MockMvcResultMatchers.model().attribute("result", "USER_NOT_FOUND"))
-        .andReturn();
+        .andReturn()
+        .getResponse()
+        .getContentAsString();
     
-    Document document = Jsoup.parse(result.getResponse().getContentAsString());
+    Document document = Jsoup.parse(content);
     assertThat(document.title()).isEqualTo("Verify Email | SSO");
     assertThat(document.select("h2").first().text()).isEqualTo("Verification failed");
 
@@ -154,13 +150,15 @@ public class SignUpControllerTest {
 
     doThrow(new VerificationException(VerificationError.ALREADY_VERIFIED)).when(userService).verifyEmail(token);
 
-    MvcResult result = mockMvc.perform(get("/signup/verify_email/{token}", token))
+    String content = mockMvc.perform(get("/signup/verify_email/{token}", token))
         .andExpect(status().isOk())
         .andExpect(view().name("verifyEmail"))
         .andExpect(MockMvcResultMatchers.model().attribute("result", "ALREADY_VERIFIED"))
-        .andReturn();
+        .andReturn()
+        .getResponse()
+        .getContentAsString();
     
-    Document document = Jsoup.parse(result.getResponse().getContentAsString());
+    Document document = Jsoup.parse(content);
     assertThat(document.title()).isEqualTo("Verify Email | SSO");
     assertThat(document.select("h2").first().text()).isEqualTo("Verification successful");
 
@@ -173,13 +171,15 @@ public class SignUpControllerTest {
 
     doThrow(new VerificationException(VerificationError.INVALID_TOKEN)).when(userService).verifyEmail(token);
 
-    MvcResult result = mockMvc.perform(get("/signup/verify_email/{token}", token))
+    String content = mockMvc.perform(get("/signup/verify_email/{token}", token))
         .andExpect(status().isOk())
         .andExpect(view().name("verifyEmail"))
         .andExpect(MockMvcResultMatchers.model().attribute("result", "INVALID_TOKEN"))
-        .andReturn();
+        .andReturn()
+        .getResponse()
+        .getContentAsString();
     
-    Document document = Jsoup.parse(result.getResponse().getContentAsString());
+    Document document = Jsoup.parse(content);
     assertThat(document.title()).isEqualTo("Verify Email | SSO");
     assertThat(document.select("h2").first().text()).isEqualTo("Verification failed");
 
@@ -192,13 +192,15 @@ public class SignUpControllerTest {
 
     doThrow(new VerificationException(VerificationError.TOKEN_EXPIRED)).when(userService).verifyEmail(token);
 
-    MvcResult result = mockMvc.perform(get("/signup/verify_email/{token}", token))
+    String content = mockMvc.perform(get("/signup/verify_email/{token}", token))
         .andExpect(status().isOk())
         .andExpect(view().name("verifyEmail"))
         .andExpect(MockMvcResultMatchers.model().attribute("result", "TOKEN_EXPIRED"))
-        .andReturn();
+        .andReturn()
+        .getResponse()
+        .getContentAsString();
     
-    Document document = Jsoup.parse(result.getResponse().getContentAsString());
+    Document document = Jsoup.parse(content);
     assertThat(document.title()).isEqualTo("Verify Email | SSO");
     assertThat(document.select("h2").first().text()).isEqualTo("Verification failed");
 

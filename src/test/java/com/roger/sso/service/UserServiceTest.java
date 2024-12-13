@@ -66,7 +66,7 @@ public class UserServiceTest {
   }
 
   @Test
-  void testHandleSignUpWithExistingUnverifiedUser() {
+  public void testHandleSignUpWithExistingUnverifiedUser() {
     SignUpDto signUpDto = new SignUpDto();
     signUpDto.setEmail("test@example.com");
     signUpDto.setPassword("password123");
@@ -90,7 +90,7 @@ public class UserServiceTest {
   }
 
   @Test
-  void testHandleSignUpWithNewUser() {
+  public void testHandleSignUpWithNewUser() {
     SignUpDto signUpDto = new SignUpDto();
     signUpDto.setEmail("newuser@example.com");
     signUpDto.setPassword("password123");
@@ -114,7 +114,7 @@ public class UserServiceTest {
   }
   
   @Test
-  void testVerifyEmailWithUserNotFound() {
+  public void testVerifyEmailWithUserNotFound() {
     String token = "userNotFoundToken";
     String email = "test@example.com";
     Claims claims = mock(Claims.class);
@@ -132,7 +132,7 @@ public class UserServiceTest {
   }
 
   @Test
-  void testVerifyEmailWithAlreadyVerified() {
+  public void testVerifyEmailWithAlreadyVerified() {
     String token = "alreadyVerifiedToken";
     String email = "test@example.com";
 
@@ -154,7 +154,7 @@ public class UserServiceTest {
   }
 
   @Test
-  void testVerifyEmailWithTokenExpired() {
+  public void testVerifyEmailWithTokenExpired() {
     String token = "expiredToken";
     String email = "test@example.com";
 
@@ -176,7 +176,7 @@ public class UserServiceTest {
   }
 
   @Test
-  void testVerifyEmailWithInvalidToken() {
+  public void testVerifyEmailWithInvalidToken() {
     String token = "invalidToken";
     String email = "test@example.com";
 
@@ -198,7 +198,7 @@ public class UserServiceTest {
   }
 
   @Test
-  void testVerifyEmailWithSuccess() {
+  public void testVerifyEmailWithSuccess() {
     String token = "validToken";
     String email = "test@example.com";
 

@@ -44,11 +44,6 @@ public class SignUpController {
     }
   }
 
-  @GetMapping("/email_sent")
-  public String getVerifyEmailSentPage() {
-    return "emailSent";
-  }
-
   @GetMapping("/verify_email/{token}")
   public String getVerifyEmailPage(@PathVariable String token, Model model) {
     String result = "SUCCESS";

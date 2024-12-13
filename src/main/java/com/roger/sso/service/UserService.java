@@ -9,6 +9,7 @@ import com.roger.sso.util.PasswordUtil;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -27,6 +28,7 @@ public class UserService {
   @Autowired
   private RedisService redisService;
 
+  @Autowired
   private PasswordUtil passwordUtil;
 
   public void handleSignUp(SignUpDto signUpDto) {
@@ -78,5 +80,10 @@ public class UserService {
     } else {
       throw new VerificationException(VerificationError.INVALID_TOKEN);
     }
+  }
+
+  @Transactional
+  public void deleteUserByEmail(String email) {
+    userRepository.deleteByEmail(email);
   }
 }
