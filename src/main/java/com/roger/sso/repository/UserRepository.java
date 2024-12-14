@@ -6,8 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.roger.sso.entity.User;
 
+import jakarta.transaction.Transactional;
+
 public interface UserRepository extends JpaRepository<User, Long> {
   Optional<User> findByEmail(String email);
 
+  @Transactional
   void deleteByEmail(String email);
 }

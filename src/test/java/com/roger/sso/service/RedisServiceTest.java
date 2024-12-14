@@ -12,14 +12,17 @@ public class RedisServiceTest {
   private RedisService redisService;
 
   @Test
-  public void testSaveGetRedis() {
+  public void testRedisFunctions() {
     String key = "testKey" + (int) (Math.random() * 1000);
     String value = "testValue";
     long expirationTime = 5;
 
     redisService.saveRedis(key, value, expirationTime);
-    String result = redisService.getRedis(key);
 
+    String result = redisService.getRedis(key);
     assertEquals(value, result);
+
+    redisService.deleteRedis(key);
+    assertEquals(null, redisService.getRedis(key));
   }
 }

@@ -11,6 +11,9 @@ import jakarta.mail.internet.MimeMessage;
 
 @Service
 public class EmailService {
+  @Value("${spring.token.expiration.verification.minutes}")
+  private int verificationExpirationMinutes;
+
   @Autowired
   private JavaMailSender mailSender;
 
@@ -50,7 +53,7 @@ public class EmailService {
   public void sendActivationEmail(String to, String token) {
     String link = host + "/signup/verify_email/" + token;
     String subject = "Account Activation - SSO";
-    String html = "<p>Thank you for registering with SSO. Click the link below in 5 minutes to activate your account:</p>"
+    String html = "<p>Thank you for registering with SSO. Click the link below in " + verificationExpirationMinutes + " minutes to activate your account:</p>"
       + "<p><a href=\"" + link + "\">Activate Account</a></p>";
     sendHtmlEmail(to, subject, html);
   }

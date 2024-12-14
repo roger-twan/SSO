@@ -46,6 +46,12 @@ public class RedisService {
     }
   }
 
+  public void deleteRedis(String key) {
+    try (Jedis jedis = jedisPool.getResource()) {
+      jedis.del(key);
+    }
+  }
+
   public void shutdown() {
     if (jedisPool != null) {
       jedisPool.close();

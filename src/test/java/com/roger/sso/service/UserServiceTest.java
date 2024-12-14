@@ -1,5 +1,7 @@
 package com.roger.sso.service;
 
+import com.roger.sso.dto.SignInReqDto;
+import com.roger.sso.dto.SignInResDto;
 import com.roger.sso.dto.SignUpDto;
 import com.roger.sso.entity.User;
 import com.roger.sso.enums.VerificationError;
@@ -10,12 +12,15 @@ import com.roger.sso.util.PasswordUtil;
 import io.jsonwebtoken.Claims;
 
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -27,22 +32,28 @@ import java.util.Optional;
 
 @SpringBootTest
 public class UserServiceTest {
-  @Mock
+  @Value("${spring.token.expiration.verification.minutes}")
+  private int verificationExpirationMinutes;
+
+  @Value("${spring.token.expiration.auth.days}")
+  private int authExpirationDays;
+
+  @MockitoBean
   private UserRepository userRepository;
 
-  @Mock
+  @MockitoBean
   private TokenService tokenService;
 
-  @Mock
+  @MockitoBean
   private EmailService emailService;
 
-  @Mock
+  @MockitoBean
   private RedisService redisService;
 
-  @Mock
+  @MockitoBean
   private PasswordUtil passwordUtil;
 
-  @InjectMocks
+  @Autowired
   private UserService userService;
 
   @Test
@@ -85,7 +96,7 @@ public class UserServiceTest {
     userService.handleSignUp(signUpDto);
     verify(existingUser).setPassword(encodedPassed);
     verify(userRepository).save(existingUser);
-    verify(redisService).saveRedis("verify:" + signUpDto.getEmail(), mockToken, 60 * 5);
+    verify(redisService).saveRedis("verify:" + signUpDto.getEmail(), mockToken, 60 * verificationExpirationMinutes);
     verify(emailService).sendActivationEmail(signUpDto.getEmail(), mockToken);
   }
 
@@ -104,15 +115,14 @@ public class UserServiceTest {
 
     userService.handleSignUp(signUpDto);
 
-    verify(userRepository).save(argThat(user ->
-        user.getEmail().equals(signUpDto.getEmail()) &&
+    verify(userRepository).save(argThat(user -> user.getEmail().equals(signUpDto.getEmail()) &&
         user.getPassword().equals(encodedPassed) &&
         user.getStatus() == 0 &&
         user.getId() != null));
-    verify(redisService).saveRedis("verify:" + signUpDto.getEmail(), mockToken, 60 * 5);
+    verify(redisService).saveRedis("verify:" + signUpDto.getEmail(), mockToken, 60 * verificationExpirationMinutes);
     verify(emailService).sendActivationEmail(signUpDto.getEmail(), mockToken);
   }
-  
+
   @Test
   public void testVerifyEmailWithUserNotFound() {
     String token = "userNotFoundToken";
@@ -181,14 +191,14 @@ public class UserServiceTest {
     String email = "test@example.com";
 
     User existingUser = new User();
-      existingUser.setStatus(0); 
+    existingUser.setStatus(0);
 
-      Claims claims = mock(Claims.class);
+    Claims claims = mock(Claims.class);
 
-      when(claims.getSubject()).thenReturn(email);
-      when(tokenService.parseToken(token)).thenReturn(claims);
+    when(claims.getSubject()).thenReturn(email);
+    when(tokenService.parseToken(token)).thenReturn(claims);
     when(redisService.getRedis("verify:" + email)).thenReturn("differentToken");
-    when(userRepository.findByEmail(email)).thenReturn(Optional.empty()); 
+    when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
 
     VerificationException exception = assertThrows(VerificationException.class, () -> {
       userService.verifyEmail(token);
@@ -216,5 +226,121 @@ public class UserServiceTest {
 
     assertEquals(1, existingUser.getStatus());
     verify(userRepository).save(existingUser);
+  }
+
+  @Test
+  public void testHandleSignInWithSuccess() {
+    String email = "test@example.com";
+    String password = "password123";
+    String hashedPassword = "hashedPassword";
+    String token = "validToken";
+
+    SignInReqDto signInDto = new SignInReqDto();
+    signInDto.setEmail("test@example.com");
+    signInDto.setPassword("password123");
+
+    User user = new User();
+    user.setEmail(email);
+    user.setPassword(hashedPassword);
+    user.setStatus(1);
+
+    when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+    when(passwordUtil.matches(password, hashedPassword)).thenReturn(true);
+    when(tokenService.generateToken(email)).thenReturn(token);
+
+    SignInResDto signInRes = userService.handleSignIn(signInDto);
+
+    assertEquals(token, signInRes.getToken());
+    assertEquals(authExpirationDays, signInRes.getAuthExpirationDays());
+
+    verify(redisService).saveRedis("auth:" + token, token, 60 * 60 * 24 * authExpirationDays);
+  }
+
+  @Test
+  public void testHandleSignInWithEmailNotFound() {
+    String email = "test@example.com";
+    String password = "password123";
+
+    SignInReqDto signInDto = new SignInReqDto();
+    signInDto.setEmail(email);
+    signInDto.setPassword(password);
+
+    when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+      userService.handleSignIn(signInDto);
+    });
+
+    assertEquals("Email or password is incorrect.", exception.getMessage());
+    verifyNoInteractions(passwordUtil, tokenService, redisService);
+  }
+
+  @Test
+  public void testHandleSignInWithPasswordMismatch() {
+    String email = "test@example.com";
+    String hashedPassword = "hashedPassword123";
+    String wrongPassword = "wrongPassword123";
+
+    SignInReqDto signInDto = new SignInReqDto();
+    signInDto.setEmail(email);
+    signInDto.setPassword(wrongPassword);
+
+    User user = new User();
+    user.setEmail(email);
+    user.setPassword(hashedPassword);
+    user.setStatus(1);
+
+    when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+    when(passwordUtil.matches(wrongPassword, hashedPassword)).thenReturn(false);
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+      userService.handleSignIn(signInDto);
+    });
+
+    assertEquals("Email or password is incorrect.", exception.getMessage());
+    verifyNoInteractions(tokenService, redisService);
+  }
+
+  @Test
+  public void testHandleSignInWithUnverifiedEmail() {
+    String email = "test@example.com";
+    String password = "password123";
+    String hashedPassword = "hashedPassword123";
+
+    SignInReqDto signInDto = new SignInReqDto();
+    signInDto.setEmail(email);
+    signInDto.setPassword(password);
+
+    User user = new User();
+    user.setEmail(email);
+    user.setPassword(hashedPassword);
+    user.setStatus(0);
+
+    when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+    when(passwordUtil.matches(password, hashedPassword)).thenReturn(true);
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+      userService.handleSignIn(signInDto);
+    });
+
+    assertEquals("Please verify your email first.", exception.getMessage());
+    verifyNoInteractions(tokenService, redisService);
+  }
+
+  @Test
+  public void testGetAuthStatusWithTokenFound() {
+    String token = "validToken";
+    String redisValue = "someTokenValue";
+    when(redisService.getRedis("auth:" + token)).thenReturn(redisValue);
+
+    assertTrue(userService.getAuthStatus(token));
+  }
+
+  @Test
+  public void testGetAuthStatusWithTokenNotFound() {
+    String token = "invalidToken";
+    when(redisService.getRedis("auth:" + token)).thenReturn(null);
+
+    assertFalse(userService.getAuthStatus(token));
   }
 }

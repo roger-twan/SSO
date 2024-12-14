@@ -1,5 +1,7 @@
 package com.roger.sso.service;
 
+import com.roger.sso.dto.SignInReqDto;
+import com.roger.sso.dto.SignInResDto;
 import com.roger.sso.dto.SignUpDto;
 import com.roger.sso.entity.User;
 import com.roger.sso.enums.VerificationError;
@@ -8,14 +10,20 @@ import com.roger.sso.repository.UserRepository;
 import com.roger.sso.util.PasswordUtil;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
 public class UserService {
+  @Value("${spring.token.expiration.verification.minutes}")
+  private int verificationExpirationMinutes;
+
+  @Value("${spring.token.expiration.auth.days}")
+  private int authExpirationDays;
+
   @Autowired
   private UserRepository userRepository;
 
@@ -54,7 +62,7 @@ public class UserService {
     }
 
     String token = tokenService.generateToken(email);
-    redisService.saveRedis("verify:" + email, token, 60 * 5);
+    redisService.saveRedis("verify:" + email, token, 60 * verificationExpirationMinutes);
     emailService.sendActivationEmail(email, token);
   }
 
@@ -82,8 +90,33 @@ public class UserService {
     }
   }
 
-  @Transactional
-  public void deleteUserByEmail(String email) {
-    userRepository.deleteByEmail(email);
+  public SignInResDto handleSignIn(SignInReqDto signInDto) {
+    String email = signInDto.getEmail().toLowerCase().trim();
+    Optional<User> optionalUser = userRepository.findByEmail(email);
+
+    if (optionalUser.isEmpty()) {
+      throw new IllegalArgumentException("Email or password is incorrect.");
+    } else {
+      User user = optionalUser.get();
+      String password = user.getPassword();
+      int status = user.getStatus();
+      
+      if (passwordUtil.matches(signInDto.getPassword(), password)) {
+        if (status == 0) {
+          throw new IllegalArgumentException("Please verify your email first.");
+        }
+        String token = tokenService.generateToken(email);
+        redisService.saveRedis("auth:" + token, token, 60 * 60 * 24 * authExpirationDays);
+        return new SignInResDto(token, authExpirationDays);
+      } else {
+        throw new IllegalArgumentException("Email or password is incorrect.");
+      }
+    }
+  }
+
+  public boolean getAuthStatus(String token) {
+    String redisToken = redisService.getRedis("auth:" + token);
+
+    return redisToken != null;
   }
 }

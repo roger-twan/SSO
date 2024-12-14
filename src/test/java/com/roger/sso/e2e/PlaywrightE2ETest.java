@@ -15,11 +15,18 @@ import com.microsoft.playwright.BrowserType;
 import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
-import com.roger.sso.service.UserService;
+import com.microsoft.playwright.options.Cookie;
+import com.roger.sso.entity.User;
+import com.roger.sso.repository.UserRepository;
+import com.roger.sso.service.RedisService;
+import com.roger.sso.util.PasswordUtil;
 
 import jakarta.annotation.PostConstruct;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import java.util.List;
 
 @SpringBootTest
 public class PlaywrightE2ETest {
@@ -36,7 +43,13 @@ public class PlaywrightE2ETest {
   private Page page;
 
   @Autowired
-  private UserService userService;
+  private PasswordUtil passwordUtil;
+
+  @Autowired
+  private RedisService redisService;
+
+  @Autowired
+  private UserRepository userRepository;
 
   @PostConstruct
   void init() {
@@ -47,10 +60,9 @@ public class PlaywrightE2ETest {
   static void launchBrowser() {
     playwright = Playwright.create();
     browser = playwright.chromium().launch(
-      new BrowserType.LaunchOptions()
-        .setHeadless(staticHeadless)
-        .setSlowMo(500)
-    );
+        new BrowserType.LaunchOptions()
+            .setHeadless(staticHeadless)
+            .setSlowMo(500));
   }
 
   @AfterAll
@@ -92,6 +104,81 @@ public class PlaywrightE2ETest {
     assertThat(page).hasTitle("Email Sent | SSO");
     assertThat(page.locator("h2")).hasText("Thanks for signing up");
 
-    userService.deleteUserByEmail(testEmail);
+    userRepository.deleteByEmail(testEmail);
+  }
+
+  @Test
+  public void testSignInToHomeSuccess() {
+    String testEmail = "test@example.com";
+    String testPassword = "Password123";
+
+    User user = new User();
+    user.setId("testId");
+    user.setEmail(testEmail);
+    user.setPassword(passwordUtil.encode(testPassword));
+    user.setStatus(1);
+    userRepository.save(user);
+
+    page.navigate(host + "/signin");
+
+    assertThat(page).hasTitle("Sign In | SSO");
+
+    Locator email = page.locator("#email");
+    Locator password = page.locator("#password");
+    Locator submit = page.locator("button[type=submit]");
+
+    email.fill(testEmail);
+    password.fill(testPassword);
+    submit.click();
+
+    page.waitForURL("**/");
+    assertThat(page).hasTitle("Home | SSO");
+
+    List<Cookie> cookies = context.cookies();
+    Cookie authTokenCookie = cookies.stream().filter(cookie -> cookie.name.equals("authToken")).findFirst().orElse(null);
+    assertNotNull(authTokenCookie);
+
+    context.clearCookies();
+    redisService.deleteRedis("auth:" + authTokenCookie.value);
+    userRepository.delete(user);
+  }
+
+  @Test
+  public void testSignInToRedirectSuccess() {
+    String testEmail = "test@example.com";
+    String testPassword = "Password123";
+    String testRedirectUrl = "https://google.com";
+
+    User user = new User();
+    user.setId("testId");
+    user.setEmail(testEmail);
+    user.setPassword(passwordUtil.encode(testPassword));
+    user.setStatus(1);
+    userRepository.save(user);
+
+    page.navigate(host + "/signin?redirect=" + testRedirectUrl);
+
+    assertThat(page).hasTitle("Sign In | SSO");
+
+    Locator email = page.locator("#email");
+    Locator password = page.locator("#password");
+    Locator submit = page.locator("button[type=submit]");
+
+    email.fill(testEmail);
+    password.fill(testPassword);
+    submit.click();
+
+    page.waitForURL("**/authorization?redirect=" + testRedirectUrl);
+    assertThat(page).hasTitle("Authorization | SSO");
+
+    List<Cookie> cookies = context.cookies();
+    Cookie authTokenCookie = cookies.stream().filter(cookie -> cookie.name.equals("authToken")).findFirst().orElse(null);
+    assertNotNull(authTokenCookie);
+
+    // TODO: verify redirect URL
+
+    context.clearCookies();
+    redisService.deleteRedis("auth:" + authTokenCookie.value);
+    userRepository.delete(user);
   }
 }
