@@ -10,9 +10,4 @@ public class RootController {
   public String getHomePage() {
     return "home";
   }
-
-  @GetMapping("/authorization")
-  public String getAuthorizationPage() {
-    return "authorization";
-  }
 }

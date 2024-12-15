@@ -48,7 +48,7 @@ public class SignInControllerTest {
         .param("redirect", redirect)
         .cookie(new Cookie("authToken", authToken)))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/authorization?redirect=" + redirect));
+        .andExpect(redirectedUrl("/auth?redirect=" + redirect));
 
     verify(userService).getAuthStatus(authToken);
   }
@@ -137,7 +137,7 @@ public class SignInControllerTest {
     mockMvc.perform(MockMvcRequestBuilders.post("/signin")
         .flashAttr("signInReqDto", signInReqDto))
         .andExpect(status().is3xxRedirection())
-        .andExpect(redirectedUrl("/authorization?redirect=" + redirect))
+        .andExpect(redirectedUrl("/auth?redirect=" + redirect))
         .andExpect(cookie().exists("authToken"))
         .andExpect(cookie().value("authToken", token))
         .andExpect(cookie().httpOnly("authToken", true));

@@ -4,14 +4,17 @@ import com.roger.sso.dto.SignInReqDto;
 import com.roger.sso.dto.SignInResDto;
 import com.roger.sso.dto.SignUpDto;
 import com.roger.sso.entity.User;
+import com.roger.sso.entity.UserAuthedHost;
 import com.roger.sso.enums.VerificationError;
 import com.roger.sso.exception.VerificationException;
+import com.roger.sso.repository.UserAuthedHostRepository;
 import com.roger.sso.repository.UserRepository;
 import com.roger.sso.util.PasswordUtil;
 
 import io.jsonwebtoken.Claims;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -28,6 +31,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.Map;
 import java.util.Optional;
 
 @SpringBootTest
@@ -40,6 +44,9 @@ public class UserServiceTest {
 
   @MockitoBean
   private UserRepository userRepository;
+
+  @MockitoBean
+  private UserAuthedHostRepository userAuthedHostRepository;
 
   @MockitoBean
   private TokenService tokenService;
@@ -325,6 +332,76 @@ public class UserServiceTest {
 
     assertEquals("Please verify your email first.", exception.getMessage());
     verifyNoInteractions(tokenService, redisService);
+  }
+
+  @Test
+  public void verifyAuthorizedWithSuccess() {
+    String token = "validToken";
+    String host = "example.com";
+    String userId = "user123";
+
+    Claims claims = Mockito.mock(Claims.class);
+    when(claims.get("userId")).thenReturn(userId);
+
+    when(redisService.getRedis("auth:" + token)).thenReturn(token);
+    when(tokenService.parseToken(token)).thenReturn(claims);
+    when(userAuthedHostRepository.findUserAuthedHost(userId, host)).thenReturn(Optional.of(new UserAuthedHost()));
+
+    boolean result = userService.verifyAuthorized(token, host);
+
+    assertTrue(result);
+
+    verify(redisService).getRedis("auth:" + token);
+    verify(tokenService).parseToken(token);
+    verify(userAuthedHostRepository).findUserAuthedHost(userId, host);
+  }
+
+  @Test
+  public void verifyAuthorizedWithInvalidToken() {
+    String token = "invalidToken";
+    when(redisService.getRedis("auth:" + token)).thenReturn(null);
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        () -> userService.verifyAuthorized(token, "example.com"));
+
+    assertEquals("Invalid token.", exception.getMessage());
+
+    verify(redisService).getRedis("auth:" + token);
+    verifyNoInteractions(tokenService, userAuthedHostRepository);
+  }
+
+  @Test
+  public void addAuthHostWithSuccess() {
+    String token = "validToken";
+    String host = "example.com";
+    String userId = "user123";
+
+    Claims claims = Mockito.mock(Claims.class);
+    when(claims.get("userId")).thenReturn(userId);
+
+    when(redisService.getRedis("auth:" + token)).thenReturn(token);
+    when(tokenService.parseToken(token)).thenReturn(claims);
+
+    userService.addAuthHost(token, host);
+
+    verify(redisService).getRedis("auth:" + token);
+    verify(tokenService).parseToken(token);
+    verify(userAuthedHostRepository).save(
+        argThat(userAuthedHost -> userAuthedHost.getUserId().equals(userId) && userAuthedHost.getHost().equals(host)));
+  }
+
+  @Test
+  public void addAuthHostWithInvalidToken() {
+    String token = "invalidToken";
+    when(redisService.getRedis("auth:" + token)).thenReturn(null);
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        () -> userService.addAuthHost(token, "example.com"));
+
+    assertEquals("Invalid token.", exception.getMessage());
+
+    verify(redisService).getRedis("auth:" + token);
+    verifyNoInteractions(tokenService, userAuthedHostRepository);
   }
 
   @Test

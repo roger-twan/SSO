@@ -30,7 +30,7 @@ public class SignInController {
       if (redirect == null || redirect.isEmpty()) {
         return "redirect:/";
       } else {
-        return "redirect:/authorization?redirect=" + redirect;
+        return "redirect:/auth?redirect=" + redirect;
       }
     }
 
@@ -69,7 +69,7 @@ public class SignInController {
       if (redirect == null || redirect.isEmpty()) {
         return "redirect:/";
       } else {
-        return "redirect:/authorization?redirect=" + redirect;
+        return "redirect:/auth?redirect=" + redirect;
       }
     } catch (IllegalArgumentException e) {
       model.addAttribute("errorMessage", e.getMessage());

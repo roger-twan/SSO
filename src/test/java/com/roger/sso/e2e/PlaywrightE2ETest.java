@@ -17,6 +17,7 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
 import com.microsoft.playwright.options.Cookie;
 import com.roger.sso.entity.User;
+import com.roger.sso.repository.UserAuthedHostRepository;
 import com.roger.sso.repository.UserRepository;
 import com.roger.sso.service.RedisService;
 import com.roger.sso.util.PasswordUtil;
@@ -50,6 +51,9 @@ public class PlaywrightE2ETest {
 
   @Autowired
   private UserRepository userRepository;
+
+  @Autowired
+  private UserAuthedHostRepository userAuthedHostRepository;
 
   @PostConstruct
   void init() {
@@ -147,7 +151,7 @@ public class PlaywrightE2ETest {
   public void testSignInToRedirectSuccess() {
     String testEmail = "test@example.com";
     String testPassword = "Password123";
-    String testRedirectUrl = "https://google.com";
+    String testRedirectUrl = "https://www.google.com";
 
     User user = new User();
     user.setId("testId");
@@ -168,14 +172,20 @@ public class PlaywrightE2ETest {
     password.fill(testPassword);
     submit.click();
 
-    page.waitForURL("**/authorization?redirect=" + testRedirectUrl);
+    page.waitForURL("**/auth?redirect=" + testRedirectUrl);
     assertThat(page).hasTitle("Authorization | SSO");
 
     List<Cookie> cookies = context.cookies();
     Cookie authTokenCookie = cookies.stream().filter(cookie -> cookie.name.equals("authToken")).findFirst().orElse(null);
     assertNotNull(authTokenCookie);
 
-    // TODO: verify redirect URL
+    // verify redirect
+    Locator h2 = page.locator("h2");
+    assertThat(h2).hasText("Authorization Confirm");
+    Locator confirmBtn = page.locator("a").first();
+    confirmBtn.click();
+    page.waitForURL(url -> url.startsWith(testRedirectUrl));
+    userAuthedHostRepository.deleteByUserId(user.getId());
 
     context.clearCookies();
     redisService.deleteRedis("auth:" + authTokenCookie.value);

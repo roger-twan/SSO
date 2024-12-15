@@ -4,8 +4,10 @@ import com.roger.sso.dto.SignInReqDto;
 import com.roger.sso.dto.SignInResDto;
 import com.roger.sso.dto.SignUpDto;
 import com.roger.sso.entity.User;
+import com.roger.sso.entity.UserAuthedHost;
 import com.roger.sso.enums.VerificationError;
 import com.roger.sso.exception.VerificationException;
+import com.roger.sso.repository.UserAuthedHostRepository;
 import com.roger.sso.repository.UserRepository;
 import com.roger.sso.util.PasswordUtil;
 
@@ -13,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,6 +30,9 @@ public class UserService {
 
   @Autowired
   private UserRepository userRepository;
+
+  @Autowired
+  private UserAuthedHostRepository userAuthedHostRepository;
 
   @Autowired
   private TokenService tokenService;
@@ -105,13 +112,45 @@ public class UserService {
         if (status == 0) {
           throw new IllegalArgumentException("Please verify your email first.");
         }
-        String token = tokenService.generateToken(email);
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getId());
+        String token = tokenService.generateToken(email, claims);
         redisService.saveRedis("auth:" + token, token, 60 * 60 * 24 * authExpirationDays);
         return new SignInResDto(token, authExpirationDays);
       } else {
         throw new IllegalArgumentException("Email or password is incorrect.");
       }
     }
+  }
+
+  public boolean verifyAuthorized(String token, String host) {
+    String redisToken = redisService.getRedis("auth:" + token);
+    if (redisToken == null || !redisToken.equals(token)) {
+      throw new IllegalArgumentException("Invalid token.");
+    } else {
+      String userId = tokenService.parseToken(token).get("userId").toString();
+      Optional<UserAuthedHost> optionalUserAuthedHost = userAuthedHostRepository.findUserAuthedHost(userId, host);
+
+      return optionalUserAuthedHost.isPresent();
+    }
+  }
+
+  public void addAuthHost(String token, String host) {
+    String redisToken = redisService.getRedis("auth:" + token);
+
+    if (redisToken == null || !redisToken.equals(token)) {
+      throw new IllegalArgumentException("Invalid token.");
+    }
+
+    String userId = tokenService.parseToken(token).get("userId").toString();
+
+    UserAuthedHost userAuthedHost = new UserAuthedHost();
+    userAuthedHost.setId(UUID.randomUUID().toString());
+    userAuthedHost.setUserId(userId);
+    userAuthedHost.setHost(host);
+
+    userAuthedHostRepository.save(userAuthedHost);
   }
 
   public boolean getAuthStatus(String token) {
