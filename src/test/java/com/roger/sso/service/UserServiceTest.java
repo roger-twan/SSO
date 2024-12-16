@@ -31,7 +31,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.Map;
 import java.util.Optional;
 
 @SpringBootTest
@@ -103,7 +102,7 @@ public class UserServiceTest {
     userService.handleSignUp(signUpDto);
     verify(existingUser).setPassword(encodedPassed);
     verify(userRepository).save(existingUser);
-    verify(redisService).saveRedis("verify:" + signUpDto.getEmail(), mockToken, 60 * verificationExpirationMinutes);
+    verify(redisService).saveVerifyTokenRedis(signUpDto.getEmail(), mockToken, 60 * verificationExpirationMinutes);
     verify(emailService).sendActivationEmail(signUpDto.getEmail(), mockToken);
   }
 
@@ -126,7 +125,7 @@ public class UserServiceTest {
         user.getPassword().equals(encodedPassed) &&
         user.getStatus() == 0 &&
         user.getId() != null));
-    verify(redisService).saveRedis("verify:" + signUpDto.getEmail(), mockToken, 60 * verificationExpirationMinutes);
+    verify(redisService).saveVerifyTokenRedis(signUpDto.getEmail(), mockToken, 60 * verificationExpirationMinutes);
     verify(emailService).sendActivationEmail(signUpDto.getEmail(), mockToken);
   }
 
@@ -138,7 +137,7 @@ public class UserServiceTest {
 
     when(claims.getSubject()).thenReturn(email);
     when(tokenService.parseToken(token)).thenReturn(claims);
-    when(redisService.getRedis("verify:" + email)).thenReturn(null);
+    when(redisService.getVerifyTokenRedis(email)).thenReturn(null);
     when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
 
     VerificationException exception = assertThrows(VerificationException.class, () -> {
@@ -160,7 +159,7 @@ public class UserServiceTest {
 
     when(claims.getSubject()).thenReturn(email);
     when(tokenService.parseToken(token)).thenReturn(claims);
-    when(redisService.getRedis("verify:" + email)).thenReturn(null);
+    when(redisService.getVerifyTokenRedis(email)).thenReturn(null);
     when(userRepository.findByEmail(email)).thenReturn(Optional.of(existingUser));
 
     VerificationException exception = assertThrows(VerificationException.class, () -> {
@@ -182,7 +181,7 @@ public class UserServiceTest {
 
     when(claims.getSubject()).thenReturn(email);
     when(tokenService.parseToken(token)).thenReturn(claims);
-    when(redisService.getRedis("verify:" + email)).thenReturn(null);
+    when(redisService.getVerifyTokenRedis(email)).thenReturn(null);
     when(userRepository.findByEmail(email)).thenReturn(Optional.of(existingUser));
 
     VerificationException exception = assertThrows(VerificationException.class, () -> {
@@ -204,7 +203,7 @@ public class UserServiceTest {
 
     when(claims.getSubject()).thenReturn(email);
     when(tokenService.parseToken(token)).thenReturn(claims);
-    when(redisService.getRedis("verify:" + email)).thenReturn("differentToken");
+    when(redisService.getVerifyTokenRedis(email)).thenReturn("differentToken");
     when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
 
     VerificationException exception = assertThrows(VerificationException.class, () -> {
@@ -226,7 +225,7 @@ public class UserServiceTest {
 
     when(claims.getSubject()).thenReturn(email);
     when(tokenService.parseToken(token)).thenReturn(claims);
-    when(redisService.getRedis("verify:" + email)).thenReturn(token);
+    when(redisService.getVerifyTokenRedis(email)).thenReturn(token);
     when(userRepository.findByEmail(email)).thenReturn(Optional.of(existingUser));
 
     userService.verifyEmail(token);
@@ -260,7 +259,7 @@ public class UserServiceTest {
     assertEquals(token, signInRes.getToken());
     assertEquals(authExpirationDays, signInRes.getAuthExpirationDays());
 
-    verify(redisService).saveRedis("auth:" + token, token, 60 * 60 * 24 * authExpirationDays);
+    verify(redisService).saveAuthTokenRedis(token, token, 60 * 60 * 24 * authExpirationDays);
   }
 
   @Test
@@ -343,7 +342,7 @@ public class UserServiceTest {
     Claims claims = Mockito.mock(Claims.class);
     when(claims.get("userId")).thenReturn(userId);
 
-    when(redisService.getRedis("auth:" + token)).thenReturn(token);
+    when(redisService.getAuthTokenRedis(token)).thenReturn(token);
     when(tokenService.parseToken(token)).thenReturn(claims);
     when(userAuthedHostRepository.findUserAuthedHost(userId, host)).thenReturn(Optional.of(new UserAuthedHost()));
 
@@ -351,7 +350,7 @@ public class UserServiceTest {
 
     assertTrue(result);
 
-    verify(redisService).getRedis("auth:" + token);
+    verify(redisService).getAuthTokenRedis(token);
     verify(tokenService).parseToken(token);
     verify(userAuthedHostRepository).findUserAuthedHost(userId, host);
   }
@@ -359,14 +358,14 @@ public class UserServiceTest {
   @Test
   public void verifyAuthorizedWithInvalidToken() {
     String token = "invalidToken";
-    when(redisService.getRedis("auth:" + token)).thenReturn(null);
+    when(redisService.getAuthTokenRedis(token)).thenReturn(null);
 
     IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
         () -> userService.verifyAuthorized(token, "example.com"));
 
     assertEquals("Invalid token.", exception.getMessage());
 
-    verify(redisService).getRedis("auth:" + token);
+    verify(redisService).getAuthTokenRedis(token);
     verifyNoInteractions(tokenService, userAuthedHostRepository);
   }
 
@@ -379,12 +378,12 @@ public class UserServiceTest {
     Claims claims = Mockito.mock(Claims.class);
     when(claims.get("userId")).thenReturn(userId);
 
-    when(redisService.getRedis("auth:" + token)).thenReturn(token);
+    when(redisService.getAuthTokenRedis(token)).thenReturn(token);
     when(tokenService.parseToken(token)).thenReturn(claims);
 
     userService.addAuthHost(token, host);
 
-    verify(redisService).getRedis("auth:" + token);
+    verify(redisService).getAuthTokenRedis(token);
     verify(tokenService).parseToken(token);
     verify(userAuthedHostRepository).save(
         argThat(userAuthedHost -> userAuthedHost.getUserId().equals(userId) && userAuthedHost.getHost().equals(host)));
@@ -393,14 +392,14 @@ public class UserServiceTest {
   @Test
   public void addAuthHostWithInvalidToken() {
     String token = "invalidToken";
-    when(redisService.getRedis("auth:" + token)).thenReturn(null);
+    when(redisService.getAuthTokenRedis(token)).thenReturn(null);
 
     IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
         () -> userService.addAuthHost(token, "example.com"));
 
     assertEquals("Invalid token.", exception.getMessage());
 
-    verify(redisService).getRedis("auth:" + token);
+    verify(redisService).getAuthTokenRedis(token);
     verifyNoInteractions(tokenService, userAuthedHostRepository);
   }
 
@@ -408,7 +407,7 @@ public class UserServiceTest {
   public void testGetAuthStatusWithTokenFound() {
     String token = "validToken";
     String redisValue = "someTokenValue";
-    when(redisService.getRedis("auth:" + token)).thenReturn(redisValue);
+    when(redisService.getAuthTokenRedis(token)).thenReturn(redisValue);
 
     assertTrue(userService.getAuthStatus(token));
   }
@@ -416,7 +415,7 @@ public class UserServiceTest {
   @Test
   public void testGetAuthStatusWithTokenNotFound() {
     String token = "invalidToken";
-    when(redisService.getRedis("auth:" + token)).thenReturn(null);
+    when(redisService.getAuthTokenRedis(token)).thenReturn(null);
 
     assertFalse(userService.getAuthStatus(token));
   }

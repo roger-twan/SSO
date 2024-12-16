@@ -16,7 +16,7 @@ public class UserAuthedHostRepositoryTest {
   private UserAuthedHostRepository userAuthedHostRepository;
 
   @Test
-  void findUserAuthedHostWithExists() {
+  public void findUserAuthedHostWithExists() {
     UserAuthedHost testHost = new UserAuthedHost();
     testHost.setId("testId");
     testHost.setUserId("testUserId");
@@ -31,7 +31,7 @@ public class UserAuthedHostRepositoryTest {
   }
 
   @Test
-  void findUserAuthedHostWithNotExist() {
+  public void findUserAuthedHostWithNotExist() {
     Optional<UserAuthedHost> result = userAuthedHostRepository.findUserAuthedHost("nonExistentUser", "nonExistentHost");
 
     assertThat(result).isEmpty();

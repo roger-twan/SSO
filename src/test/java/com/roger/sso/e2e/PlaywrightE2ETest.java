@@ -56,7 +56,7 @@ public class PlaywrightE2ETest {
   private UserAuthedHostRepository userAuthedHostRepository;
 
   @PostConstruct
-  void init() {
+  public void init() {
     staticHeadless = headless;
   }
 
@@ -76,13 +76,13 @@ public class PlaywrightE2ETest {
   }
 
   @BeforeEach
-  void createContextAndPage() {
+  public void createContextAndPage() {
     context = browser.newContext();
     page = context.newPage();
   }
 
   @AfterEach
-  void closeContext() {
+  public void closeContext() {
     context.close();
   }
 
@@ -143,7 +143,7 @@ public class PlaywrightE2ETest {
     assertNotNull(authTokenCookie);
 
     context.clearCookies();
-    redisService.deleteRedis("auth:" + authTokenCookie.value);
+    redisService.deleteAuthTokenRedis(authTokenCookie.value);
     userRepository.delete(user);
   }
 
@@ -188,7 +188,7 @@ public class PlaywrightE2ETest {
     userAuthedHostRepository.deleteByUserId(user.getId());
 
     context.clearCookies();
-    redisService.deleteRedis("auth:" + authTokenCookie.value);
+    redisService.deleteAuthTokenRedis(authTokenCookie.value);
     userRepository.delete(user);
   }
 }

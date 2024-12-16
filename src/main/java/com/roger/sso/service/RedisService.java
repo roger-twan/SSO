@@ -57,4 +57,28 @@ public class RedisService {
       jedisPool.close();
     }
   }
+
+  public String getAuthTokenRedis(String key) {
+    String value = getRedis("auth:" + key);
+
+    return value == null ? null : value.replace("auth:", "");
+  }
+
+  public void saveAuthTokenRedis(String key, String value, long expirationTime) {
+    saveRedis("auth:" + key, value, expirationTime);
+  }
+
+  public void deleteAuthTokenRedis(String key) {
+    deleteRedis("auth:" + key);
+  }
+
+  public String getVerifyTokenRedis(String key) {
+    String value = getRedis("verify:" + key);
+
+    return value == null ? null : value.replace("verify:", "");
+  }
+
+  public void saveVerifyTokenRedis(String key, String value, long expirationTime) {
+    saveRedis("verify:" + key, value, expirationTime);
+  } 
 }

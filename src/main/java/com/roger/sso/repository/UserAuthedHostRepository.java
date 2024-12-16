@@ -12,7 +12,7 @@ import jakarta.transaction.Transactional;
 
 public interface UserAuthedHostRepository extends JpaRepository<UserAuthedHost, Long> {
   @Transactional
-  void deleteByUserId(String email);
+  public void deleteByUserId(String email);
 
   @Query("SELECT uah FROM UserAuthedHost uah WHERE uah.userId = :userId AND uah.host = :host")
   Optional<UserAuthedHost> findUserAuthedHost(@Param("userId") String userId, @Param("host") String host);

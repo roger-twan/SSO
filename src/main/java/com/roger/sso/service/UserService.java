@@ -69,13 +69,13 @@ public class UserService {
     }
 
     String token = tokenService.generateToken(email);
-    redisService.saveRedis("verify:" + email, token, 60 * verificationExpirationMinutes);
+    redisService.saveVerifyTokenRedis(email, token, 60 * verificationExpirationMinutes);
     emailService.sendActivationEmail(email, token);
   }
 
   public void verifyEmail(String token) {
     String email = tokenService.parseToken(token).getSubject();
-    String redisToken = redisService.getRedis("verify:" + email);
+    String redisToken = redisService.getVerifyTokenRedis(email);
     Optional<User> OptionalUser = userRepository.findByEmail(email);
 
     if (redisToken == null) {
@@ -116,7 +116,7 @@ public class UserService {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getId());
         String token = tokenService.generateToken(email, claims);
-        redisService.saveRedis("auth:" + token, token, 60 * 60 * 24 * authExpirationDays);
+        redisService.saveAuthTokenRedis(token, token, 60 * 60 * 24 * authExpirationDays);
         return new SignInResDto(token, authExpirationDays);
       } else {
         throw new IllegalArgumentException("Email or password is incorrect.");
@@ -125,7 +125,7 @@ public class UserService {
   }
 
   public boolean verifyAuthorized(String token, String host) {
-    String redisToken = redisService.getRedis("auth:" + token);
+    String redisToken = redisService.getAuthTokenRedis(token);
     if (redisToken == null || !redisToken.equals(token)) {
       throw new IllegalArgumentException("Invalid token.");
     } else {
@@ -137,7 +137,7 @@ public class UserService {
   }
 
   public void addAuthHost(String token, String host) {
-    String redisToken = redisService.getRedis("auth:" + token);
+    String redisToken = redisService.getAuthTokenRedis(token);
 
     if (redisToken == null || !redisToken.equals(token)) {
       throw new IllegalArgumentException("Invalid token.");
@@ -154,7 +154,7 @@ public class UserService {
   }
 
   public boolean getAuthStatus(String token) {
-    String redisToken = redisService.getRedis("auth:" + token);
+    String redisToken = redisService.getAuthTokenRedis(token);
 
     return redisToken != null;
   }
