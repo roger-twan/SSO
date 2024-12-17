@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 @Aspect
 @Component
-public class LoggingAspect {
+public class UserEventLoggingAspect {
 
   @Pointcut("execution(* com.example.service.*.*(..))")
   public void serviceMethods() {
