@@ -6,15 +6,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "user_event_log")
-public class UserEventLog {
+@Table(name = "user_activity_log")
+public class UserActivityLog {
   @Id
   private String id;
 
   @Column(name = "user_id")
   private String userId;
   private int type;
-  private String timestamp;
+  private Long timestamp;
 
   public String getId() {
     return id;
@@ -40,11 +40,11 @@ public class UserEventLog {
     this.type = type;
   }
 
-  public String getTimestamp() {
+  public Long getTimestamp() {
     return timestamp;
   }
 
-  public void setTimestamp(String timestamp) {
+  public void setTimestamp(Long timestamp) {
     this.timestamp = timestamp;
   }
 }

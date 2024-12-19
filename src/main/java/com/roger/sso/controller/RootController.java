@@ -2,8 +2,10 @@ package com.roger.sso.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import com.roger.sso.dto.UserInfoDto;
 import com.roger.sso.service.UserService;
 
 import jakarta.servlet.http.Cookie;
@@ -16,7 +18,12 @@ public class RootController {
   private UserService userService;
 
   @GetMapping
-  public String getHomePage() {
+  public String getHomePage(
+    @CookieValue(value = "authToken", defaultValue = "") String authToken,
+    Model model
+  ) {
+    UserInfoDto userInfoDto = userService.getUserInfo(authToken);
+    model.addAttribute("userInfo", userInfoDto);
     return "home";
   }
 

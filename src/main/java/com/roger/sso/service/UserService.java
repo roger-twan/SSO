@@ -3,11 +3,14 @@ package com.roger.sso.service;
 import com.roger.sso.dto.SignInReqDto;
 import com.roger.sso.dto.SignInResDto;
 import com.roger.sso.dto.SignUpDto;
+import com.roger.sso.dto.UserInfoDto;
 import com.roger.sso.entity.User;
 import com.roger.sso.entity.UserAuthedHost;
+import com.roger.sso.entity.UserActivityLog;
 import com.roger.sso.enums.VerificationError;
 import com.roger.sso.exception.VerificationException;
 import com.roger.sso.repository.UserAuthedHostRepository;
+import com.roger.sso.repository.UserActivityLogRepository;
 import com.roger.sso.repository.UserRepository;
 import com.roger.sso.util.PasswordUtil;
 
@@ -16,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,6 +37,8 @@ public class UserService {
 
   @Autowired
   private UserAuthedHostRepository userAuthedHostRepository;
+
+  @Autowired UserActivityLogRepository userActivityLogRepository;
 
   @Autowired
   private TokenService tokenService;
@@ -149,13 +155,34 @@ public class UserService {
     userAuthedHost.setId(UUID.randomUUID().toString());
     userAuthedHost.setUserId(userId);
     userAuthedHost.setHost(host);
-    userAuthedHost.setTimestamp(System.currentTimeMillis() + "");
+    userAuthedHost.setTimestamp(System.currentTimeMillis());
 
     userAuthedHostRepository.save(userAuthedHost);
   }
 
   public void signOut(String token) {
     redisService.deleteAuthTokenRedis(token);
+  }
+
+  public UserInfoDto getUserInfo(String token) {
+    String userId = tokenService.parseToken(token).get("userId").toString();
+    Optional<User> optionalUser = userRepository.findById(userId);
+
+    if (optionalUser.isEmpty()) {
+      throw new IllegalArgumentException("User not found.");
+    } else {
+      User user = optionalUser.get();
+      String email = user.getEmail();
+      List<UserAuthedHost> authorizedHosts = userAuthedHostRepository.findUserAuthedHosts(userId);
+      List<UserActivityLog> userActivityLogs = userActivityLogRepository.findUserActivityLogs(userId);
+
+      UserInfoDto userInfoDto = new UserInfoDto();
+      userInfoDto.setEmail(email);
+      userInfoDto.setAuthorizedHosts(authorizedHosts);
+      userInfoDto.setActivityLogs(userActivityLogs);
+
+      return userInfoDto;
+    }
   }
 
   public boolean getAuthStatus(String token) {

@@ -27,28 +27,39 @@
     <section class="flex-1 min-h-80 space-y-4 w-1/2 rounded-2xl bg-blue-100 p-4 mx-4 mb-8">
       <h2 class="text-xl font-semibold text-blue-500">Account Information</h2>
       <div>
-        <p><strong>Email:</strong> john.doe@example.com</p>
+        <p><strong>Email:</strong> <span th:text="${userInfo.email}"></span></p>
       </div>
     </section>
 
     <!-- Host Section -->
     <section class="flex-1 min-h-80 space-y-4 w-1/2 rounded-2xl bg-green-100 p-4 mx-4 mb-8">
       <h2 class="text-xl font-semibold text-green-500">Authorized Host</h2>
-      <div>
-        <p>- Logged in at 9:00 AM</p>
-        <p>- Updated profile at 9:15 AM</p>
-        <p>- Logged out at 5:00 PM</p>
-      </div>
+      <ul>
+        <li
+          th:each="host : ${userInfo.authorizedHosts}"
+          class="flex justify-between items-center py-3 px-2 border-b border-gray-300"
+        >
+          <span class="font-medium text-gray-800" th:text="${host.host}"></span>
+          <span class="text-sm text-gray-600" th:text="${#dates.format(new java.util.Date(host.timestamp), 'yyyy-MM-dd HH:mm:ss')}"></span>
+        </li>
+      </ul>
     </section>
 
     <!-- Logs Section -->
     <section class="w-full min-h-80 space-y-4 rounded-2xl bg-purple-100 p-4 mx-4 mb-8">
       <h2 class="text-xl font-semibold text-purple-500">Activity Logs</h2>
-      <div>
-        <p>- Logged in at 9:00 AM</p>
-        <p>- Updated profile at 9:15 AM</p>
-        <p>- Logged out at 5:00 PM</p>
-      </div>
+      <ul class="flex flex-wrap">
+        <li th:each="activity : ${userInfo.activityLogs}"
+          class="flex w-1/2 odd:pr-4 even:pl-4"
+        >
+          <div class="flex w-full justify-between py-3 px-2 items-center border-b border-gray-300">
+            <span class="font-medium text-gray-800"  th:if="${activity.type == 1}">Sign In</span>
+            <span class="font-medium text-gray-800"  th:if="${activity.type == 2}">Authorize Host</span>
+            <span class="font-medium text-gray-800"  th:if="${activity.type == 3}">Sign Out</span>
+            <span class="text-sm text-gray-600" th:text="${#dates.format(new java.util.Date(activity.timestamp), 'yyyy-MM-dd HH:mm:ss')}"></span>
+          </div>
+        </li>
+      </ul>
     </section>
   </main>
 </body>

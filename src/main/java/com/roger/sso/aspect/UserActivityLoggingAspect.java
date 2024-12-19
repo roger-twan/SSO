@@ -12,20 +12,20 @@ import org.springframework.stereotype.Component;
 
 import com.roger.sso.dto.SignInReqDto;
 import com.roger.sso.entity.User;
-import com.roger.sso.entity.UserEventLog;
-import com.roger.sso.enums.UserEventType;
-import com.roger.sso.repository.UserEventLogRepository;
+import com.roger.sso.entity.UserActivityLog;
+import com.roger.sso.enums.UserActivityType;
+import com.roger.sso.repository.UserActivityLogRepository;
 import com.roger.sso.repository.UserRepository;
 import com.roger.sso.service.TokenService;
 
 @Aspect
 @Component
-public class UserEventLoggingAspect {
+public class UserActivityLoggingAspect {
   @Autowired
   private UserRepository userRepository;
 
   @Autowired
-  private UserEventLogRepository userEventLogRepository;
+  private UserActivityLogRepository userActivityLogRepository;
 
   @Autowired
   private TokenService tokenService;
@@ -43,13 +43,13 @@ public class UserEventLoggingAspect {
         if (user.isPresent()) {
           String id = user.get().getId();
 
-          UserEventLog userEventLog = new UserEventLog();
-          userEventLog.setId(UUID.randomUUID().toString());
-          userEventLog.setUserId(id);
-          userEventLog.setType(UserEventType.SIGN_IN.getCode());
-          userEventLog.setTimestamp(System.currentTimeMillis() + "");
+          UserActivityLog userActivityLog = new UserActivityLog();
+          userActivityLog.setId(UUID.randomUUID().toString());
+          userActivityLog.setUserId(id);
+          userActivityLog.setType(UserActivityType.SIGN_IN.getCode());
+          userActivityLog.setTimestamp(System.currentTimeMillis());
 
-          userEventLogRepository.save(userEventLog);
+          userActivityLogRepository.save(userActivityLog);
         }
       }
     }
@@ -61,13 +61,13 @@ public class UserEventLoggingAspect {
     String token = (String) args[0];
     String userId = tokenService.parseToken(token).get("userId").toString();
 
-    UserEventLog userEventLog = new UserEventLog();
-    userEventLog.setId(UUID.randomUUID().toString());
-    userEventLog.setUserId(userId);
-    userEventLog.setType(UserEventType.AUTHORIZED.getCode());
-    userEventLog.setTimestamp(System.currentTimeMillis() + "");
+    UserActivityLog userActivityLog = new UserActivityLog();
+    userActivityLog.setId(UUID.randomUUID().toString());
+    userActivityLog.setUserId(userId);
+    userActivityLog.setType(UserActivityType.AUTHORIZED.getCode());
+    userActivityLog.setTimestamp(System.currentTimeMillis());
 
-    userEventLogRepository.save(userEventLog);
+    userActivityLogRepository.save(userActivityLog);
   }
 
   @After("execution(* com.roger.sso.service.UserService.signOut(..))")
@@ -79,13 +79,13 @@ public class UserEventLoggingAspect {
         String token = (String) arg;
         String userId = tokenService.parseToken(token).get("userId").toString();
 
-        UserEventLog userEventLog = new UserEventLog();
-        userEventLog.setId(UUID.randomUUID().toString());
-        userEventLog.setUserId(userId);
-        userEventLog.setType(UserEventType.SIGN_OUT.getCode());
-        userEventLog.setTimestamp(System.currentTimeMillis() + "");
+        UserActivityLog userActivityLog = new UserActivityLog();
+        userActivityLog.setId(UUID.randomUUID().toString());
+        userActivityLog.setUserId(userId);
+        userActivityLog.setType(UserActivityType.SIGN_OUT.getCode());
+        userActivityLog.setTimestamp(System.currentTimeMillis());
 
-        userEventLogRepository.save(userEventLog);
+        userActivityLogRepository.save(userActivityLog);
       }
     }
   }

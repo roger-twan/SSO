@@ -8,7 +8,7 @@ import com.roger.sso.entity.User;
 
 import jakarta.transaction.Transactional;
 
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, String> {
   Optional<User> findByEmail(String email);
 
   @Transactional
