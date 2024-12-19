@@ -6,14 +6,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "user_authed_host")
-public class UserAuthedHost {
+@Table(name = "user_event_log")
+public class UserEventLog {
   @Id
   private String id;
 
   @Column(name = "user_id")
   private String userId;
-  private String host;
+  private int type;
   private String timestamp;
 
   public String getId() {
@@ -32,19 +32,19 @@ public class UserAuthedHost {
     this.userId = userId;
   }
 
-  public String getHost() {
-    return host;
+  public int getType() {
+    return type;
   }
 
-  public void setHost(String host) {
-    this.host = host;
+  public void setType(int type) {
+    this.type = type;
   }
 
   public String getTimestamp() {
     return timestamp;
   }
 
-  public void setTimestamp(String timestamp) {  
+  public void setTimestamp(String timestamp) {
     this.timestamp = timestamp;
   }
 }

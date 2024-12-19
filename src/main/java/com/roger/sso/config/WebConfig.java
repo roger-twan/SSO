@@ -2,11 +2,13 @@ package com.roger.sso.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.roger.sso.interceptor.AuthInterceptor;
 
 @Configuration
+@EnableAspectJAutoProxy
 public class WebConfig implements WebMvcConfigurer {
   @Autowired
   private AuthInterceptor authInterceptor;

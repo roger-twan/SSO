@@ -149,8 +149,13 @@ public class UserService {
     userAuthedHost.setId(UUID.randomUUID().toString());
     userAuthedHost.setUserId(userId);
     userAuthedHost.setHost(host);
+    userAuthedHost.setTimestamp(System.currentTimeMillis() + "");
 
     userAuthedHostRepository.save(userAuthedHost);
+  }
+
+  public void signOut(String token) {
+    redisService.deleteAuthTokenRedis(token);
   }
 
   public boolean getAuthStatus(String token) {

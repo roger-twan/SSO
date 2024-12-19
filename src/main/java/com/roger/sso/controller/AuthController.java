@@ -37,6 +37,7 @@ public class AuthController {
         return "redirect:" + redirect + "?authToken=" + authToken;
       } else {
         model.addAttribute("authLink", "/auth/add?host=" + host + "&redirect=" + redirect);
+        model.addAttribute("host", host);
         return "auth";
       }
     } catch (IllegalArgumentException e) {

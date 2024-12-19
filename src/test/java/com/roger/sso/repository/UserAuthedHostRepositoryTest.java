@@ -21,6 +21,7 @@ public class UserAuthedHostRepositoryTest {
     testHost.setId("testId");
     testHost.setUserId("testUserId");
     testHost.setHost("testHost");
+    testHost.setTimestamp(System.currentTimeMillis() + "");
     userAuthedHostRepository.save(testHost);
 
     Optional<UserAuthedHost> result = userAuthedHostRepository.findUserAuthedHost("testUserId", "testHost");
