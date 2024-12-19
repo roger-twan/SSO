@@ -404,19 +404,19 @@ public class UserServiceTest {
   }
 
   @Test
-  public void testGetAuthStatusWithTokenFound() {
+  public void testVerifyAuthTokenWithTokenFound() {
     String token = "validToken";
     String redisValue = "someTokenValue";
     when(redisService.getAuthTokenRedis(token)).thenReturn(redisValue);
 
-    assertTrue(userService.getAuthStatus(token));
+    assertTrue(userService.verifyAuthToken(token));
   }
 
   @Test
-  public void testGetAuthStatusWithTokenNotFound() {
+  public void testVerifyAuthTokenWithTokenNotFound() {
     String token = "invalidToken";
     when(redisService.getAuthTokenRedis(token)).thenReturn(null);
 
-    assertFalse(userService.getAuthStatus(token));
+    assertFalse(userService.verifyAuthToken(token));
   }
 }

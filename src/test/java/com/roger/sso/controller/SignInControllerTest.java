@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import com.roger.sso.dto.SignInReqDto;
 import com.roger.sso.dto.SignInResDto;
+import com.roger.sso.service.RedisService;
 import com.roger.sso.service.UserService;
 
 import jakarta.servlet.http.Cookie;
@@ -37,12 +38,15 @@ public class SignInControllerTest {
   @MockitoBean
   private UserService userService;
 
+  @MockitoBean
+  private RedisService redisService;
+
   @Test
   public void testGetSignInPageWithAuthenticatedAndRedirect() throws Exception {
     String authToken = "validToken";
     String redirect = "https://test.com";
 
-    doReturn(true).when(userService).getAuthStatus(authToken);
+    doReturn(true).when(userService).verifyAuthToken(authToken);
 
     mockMvc.perform(get("/signin")
         .param("redirect", redirect)
@@ -50,21 +54,21 @@ public class SignInControllerTest {
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl("/auth?redirect=" + redirect));
 
-    verify(userService).getAuthStatus(authToken);
+    verify(userService).verifyAuthToken(authToken);
   }
 
   @Test
   public void testGetSignInPageWithAuthenticatedAndNoRedirect() throws Exception {
     String authToken = "validToken";
 
-    doReturn(true).when(userService).getAuthStatus(authToken);
+    doReturn(true).when(userService).verifyAuthToken(authToken);
 
     mockMvc.perform(get("/signin")
         .cookie(new Cookie("authToken", authToken)))
         .andExpect(status().is3xxRedirection())
         .andExpect(redirectedUrl("/"));
 
-    verify(userService).getAuthStatus(authToken);
+    verify(userService).verifyAuthToken(authToken);
   }
 
   @Test

@@ -185,7 +185,7 @@ public class UserService {
     }
   }
 
-  public boolean getAuthStatus(String token) {
+  public boolean verifyAuthToken(String token) {
     String redisToken = redisService.getAuthTokenRedis(token);
 
     return redisToken != null;

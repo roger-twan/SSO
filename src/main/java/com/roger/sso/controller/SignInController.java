@@ -26,7 +26,7 @@ public class SignInController {
     @CookieValue(value = "authToken", defaultValue = "") String authToken,
     Model model
   ) {
-    if (!authToken.isEmpty() && userService.getAuthStatus(authToken)) {
+    if (!authToken.isEmpty() && userService.verifyAuthToken(authToken)) {
       if (redirect == null || redirect.isEmpty()) {
         return "redirect:/";
       } else {
