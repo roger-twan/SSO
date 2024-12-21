@@ -17,4 +17,11 @@ public class ApiController {
   ) {
     return userService.verifyAuthToken(token);
   }
+
+  @GetMapping("/signout")
+  public String signOut(
+    @RequestParam("token") String token
+  ) {
+    return "redirect:/signout";
+  }
 }
